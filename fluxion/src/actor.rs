@@ -39,14 +39,14 @@ pub struct ActorContext<D> {
     /// The underlying system
     pub(crate) system: Fluxion<D>,
     /// The actor's id
-    pub(crate) id: u64,
+    pub(crate) id: usize,
 }
 
 impl<D: Delegate> ActorContext<D> {
     /// # [`ActorContext::get_id`]
     /// Returns the id of the actor
     #[must_use]
-    pub fn get_id(&self) -> u64 {
+    pub fn get_id(&self) -> usize {
         self.id
     }
 
