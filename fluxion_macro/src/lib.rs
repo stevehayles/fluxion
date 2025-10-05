@@ -3,10 +3,9 @@ use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
 use syn::{parse::Parse, punctuated::Punctuated, token::Comma, DeriveInput, LitStr, Token, Type};
 
-
 struct MessageParams {
     pub result_type: Type,
-    pub name: Option<LitStr>
+    pub name: Option<LitStr>,
 }
 
 impl Parse for MessageParams {
@@ -23,28 +22,24 @@ impl Parse for MessageParams {
             None
         };
 
-        Ok(Self {
-            result_type, name
-        })
+        Ok(Self { result_type, name })
     }
 }
 
 #[proc_macro_attribute]
 pub fn message(attr: TokenStream, item: TokenStream) -> TokenStream {
-
     // Get the parameters
     let params = if attr.is_empty() {
         MessageParams {
             result_type: Type::Tuple(syn::TypeTuple {
                 paren_token: syn::token::Paren(Span::call_site()),
-                elems: Punctuated::new()
+                elems: Punctuated::new(),
             }),
             name: None,
         }
     } else {
         syn::parse_macro_input!(attr as MessageParams)
     };
-
 
     // Get the item's name
     let item_name = item.clone();
@@ -56,8 +51,9 @@ pub fn message(attr: TokenStream, item: TokenStream) -> TokenStream {
         Some(name) => name.to_token_stream(),
         None => {
             // Get the name of the item
-            let name: TokenStream2 = format!("\"{}\"", item_name).parse().expect("this should always succeed parsing as a string");
-
+            let name: TokenStream2 = format!("\"{}\"", item_name)
+                .parse()
+                .expect("this should always succeed parsing as a string");
 
             quote! {
                 fluxion::concatcp!(module_path!(), "::", #name)
@@ -65,13 +61,12 @@ pub fn message(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
 
-    
     // Convert to tokenstream 2 for quote.
     let item: TokenStream2 = item.into();
 
     // Extract the result type
     let result_type = params.result_type;
-    
+
     quote! {
         #item
 
@@ -82,7 +77,8 @@ pub fn message(attr: TokenStream, item: TokenStream) -> TokenStream {
         impl fluxion::Message for #item_name {
             type Result = #result_type;
         }
-    }.into()
+    }
+    .into()
 }
 
 #[proc_macro_attribute]
@@ -152,7 +148,7 @@ pub fn actor(attr: TokenStream, item: TokenStream) -> TokenStream {
     let error_type = if attr.is_empty() {
         Type::Tuple(syn::TypeTuple {
             paren_token: syn::token::Paren(Span::call_site()),
-            elems: Punctuated::new()
+            elems: Punctuated::new(),
         })
     } else {
         syn::parse_macro_input!(attr as Type)
@@ -166,5 +162,6 @@ pub fn actor(attr: TokenStream, item: TokenStream) -> TokenStream {
         impl fluxion::Actor for #item_name {
             type Error = #error_type;
         }
-    }.into()
+    }
+    .into()
 }

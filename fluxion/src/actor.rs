@@ -1,19 +1,16 @@
 //! # Actors
-//! This module contains traits and other types and implementations surrounding actors and how they interface with the system. 
+//! This module contains traits and other types and implementations surrounding actors and how they interface with the system.
 
 use alloc::sync::Arc;
 
 use crate::{Delegate, Fluxion, Message};
 
-
-
 /// # [`Actor`]
 /// This trait defines the interface between the system and the actor.
 /// The methods defined in this trait provide the actor's only chances to access itself
-/// mutably in an async context. 
+/// mutably in an async context.
 /// All actors must implement this trait.
 pub trait Actor: Send + Sync + 'static {
-
     /// # [`Error`]
     /// This associated type contains the error type that
     /// can be returned by methods defined by this trait.
@@ -21,16 +18,16 @@ pub trait Actor: Send + Sync + 'static {
 
     /// # [`initialize`]
     /// Called immediately before the actor is added to the system.
-    fn initialize(&mut self) -> impl core::future::Future<Output = Result<(), Self::Error>> + Send {async {
-        Ok(())
-    }}
+    fn initialize(&mut self) -> impl core::future::Future<Output = Result<(), Self::Error>> + Send {
+        async { Ok(()) }
+    }
 
     /// # [`deinitialize`]
     /// Called immediately after the actor is shut down.
     /// This will be the last opportunity the actor has to execute any code in an async context.
-    fn deinitialize(&self) -> impl core::future::Future<Output = ()> + Send {async {
-        
-    }}
+    fn deinitialize(&self) -> impl core::future::Future<Output = ()> + Send {
+        async {}
+    }
 }
 
 /// # [`ActorContext`]
@@ -60,11 +57,12 @@ impl<D: Delegate> ActorContext<D> {
 
 /// # [`Handler`]
 pub trait Handler<M: Message>: Actor {
-    fn handle_message<D: Delegate>(&self, message: M, context: &ActorContext<D>) -> impl core::future::Future<Output = M::Result> + Send;
+    fn handle_message<D: Delegate>(
+        &self,
+        message: M,
+        context: &ActorContext<D>,
+    ) -> impl core::future::Future<Output = M::Result> + Send;
 }
-
-
-
 
 /// Newtype pattern implementing Slacktor's actor trait
 /// for implementorrs of our [`Actor`] trait here.
@@ -78,8 +76,10 @@ impl<R: Actor, D: Delegate> slacktor::Actor for ActorWrapper<R, D> {
 
 impl<R: Handler<M>, M: Message, D: Delegate> slacktor::actor::Handler<M> for ActorWrapper<R, D> {
     #[inline]
-    fn handle_message(&self, message: M) -> impl core::future::Future<Output = <M as Message>::Result> + Send {
+    fn handle_message(
+        &self,
+        message: M,
+    ) -> impl core::future::Future<Output = <M as Message>::Result> + Send {
         self.0.handle_message(message, &self.1)
     }
 }
-

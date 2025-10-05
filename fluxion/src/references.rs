@@ -1,9 +1,6 @@
 //! # References
 //! [`ActorRef`]s, or Actor References, are the primary method through which actors control each other.
 
-
-
-
 use crate::{Actor, ActorWrapper, Delegate, Handler, Message, MessageSendError};
 use alloc::boxed::Box;
 
@@ -18,10 +15,8 @@ pub trait ActorRef<A: Actor> {}
 /// Sadly, [`async_trait`] is also required for this trait as async fns in traits are not yet object safe either.
 #[async_trait::async_trait]
 pub trait MessageSender<M: Message>: Send + Sync + 'static {
-
-
     /// Sends the given message and waits for a response.
-    /// 
+    ///
     /// # Errors
     /// This may return an error (defined as an associated type) if the message's send fails.
     /// For [`LocalRef`], the message send will never fail, however delegates may return an error upon sending.
@@ -30,8 +25,10 @@ pub trait MessageSender<M: Message>: Send + Sync + 'static {
     async fn send(&self, message: M) -> Result<M::Result, MessageSendError>;
 }
 
-
-pub struct LocalRef<A: Actor, D: Delegate>(pub(crate) slacktor::ActorHandle<ActorWrapper<A, D>>, pub(crate) u64);
+pub struct LocalRef<A: Actor, D: Delegate>(
+    pub(crate) slacktor::ActorHandle<ActorWrapper<A, D>>,
+    pub(crate) u64,
+);
 
 impl<A: Actor, D: Delegate> LocalRef<A, D> {
     /// # [`LocalRef::get_id`]
@@ -50,7 +47,6 @@ impl<A: Actor, D: Delegate> Clone for LocalRef<A, D> {
 
 #[async_trait::async_trait]
 impl<A: Handler<M>, M: Message, D: Delegate> MessageSender<M> for LocalRef<A, D> {
-
     #[inline]
     async fn send(&self, message: M) -> Result<M::Result, MessageSendError> {
         Ok(self.0.send(message).await)

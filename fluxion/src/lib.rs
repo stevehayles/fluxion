@@ -1,15 +1,13 @@
 #! [doc = include_str! ("../README.md")]
-
-
 #![cfg_attr(not(test), no_std)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
-
 
 extern crate alloc;
 
 pub use fluxion_macro::{message, generic_message, actor};
 pub use const_format::concatcp;
+pub use fluxion_macro::{actor, message};
 
 mod fluxion;
 pub use fluxion::*;
@@ -28,6 +26,5 @@ pub use references::*;
 
 mod foreign;
 pub use foreign::*;
-
 
 pub use slacktor::Message;
