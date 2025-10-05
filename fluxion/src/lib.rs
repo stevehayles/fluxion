@@ -5,9 +5,8 @@
 
 extern crate alloc;
 
-pub use fluxion_macro::{message, generic_message, actor};
 pub use const_format::concatcp;
-pub use fluxion_macro::{actor, message};
+pub use fluxion_macro::{actor, generic_message, message};
 
 mod fluxion;
 pub use fluxion::*;
