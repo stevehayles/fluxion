@@ -85,6 +85,62 @@ pub fn message(attr: TokenStream, item: TokenStream) -> TokenStream {
     }.into()
 }
 
+#[proc_macro_attribute]
+pub fn generic_message(attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Get the parameters
+    let params = if attr.is_empty() {
+        MessageParams {
+            result_type: Type::Tuple(syn::TypeTuple {
+                paren_token: syn::token::Paren(Span::call_site()),
+                elems: Punctuated::new(),
+            }),
+            name: None,
+        }
+    } else {
+        syn::parse_macro_input!(attr as MessageParams)
+    };
+
+    // Parse the input struct
+    let input = syn::parse_macro_input!(item as DeriveInput);
+    let item_name = &input.ident;
+    let generics = &input.generics;
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    // Default the id to the path of the item if no id is provided.
+    let id: TokenStream2 = match params.name {
+        Some(name) => name.to_token_stream(),
+        None => {
+            let name: TokenStream2 = format!("\"{}\"", item_name)
+                .parse()
+                .expect("this should always succeed parsing as a string");
+
+            quote! {
+                fluxion::concatcp!(module_path!(), "::", #name)
+            }
+        }
+    };
+
+    // Extract the result type
+    let result_type = params.result_type;
+
+    // Convert item back to TokenStream2 for quote!
+    let item = quote! { #input };
+
+    quote! {
+        #item
+
+        impl #impl_generics fluxion::MessageID for #item_name #ty_generics #where_clause {
+            const ID: &'static str = #id;
+        }
+
+        impl #impl_generics fluxion::Message for #item_name #ty_generics #where_clause {
+            type Result = #result_type;
+        }
+    }
+    .into()
+}
+
+
 
 #[proc_macro_attribute]
 pub fn actor(attr: TokenStream, item: TokenStream) -> TokenStream {
